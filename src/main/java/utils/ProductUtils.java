@@ -6,32 +6,27 @@ import java.util.Properties;
 
 public class ProductUtils {
 
-    private static ProductUtils manager;
-    private final static Properties prop = new Properties();
+    private static final ProductUtils INSTANCE = new ProductUtils(); // Eager initialization
+    private final Properties prop;
 
-    private ProductUtils() throws Exception{
-        InputStream inputStream = ProductUtils.class.getResourceAsStream("../resources/Config");
-        try {
+    private ProductUtils() {
+        try (InputStream inputStream = ProductUtils.class.getClassLoader().getResourceAsStream("../../../resources/Config")) {
+            if (inputStream == null) {
+
+                throw new IllegalStateException("Config file not found");
+            }
+            prop = new Properties();
             prop.load(inputStream);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Failed to load properties", e);
         }
     }
 
-    public static ProductUtils getInstance(){
-        if(manager == null){
-            synchronized (ProductUtils.class){
-                try {
-                    manager = new ProductUtils();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return manager;
+    public static ProductUtils getInstance() {
+        return INSTANCE; // Singleton instance
     }
 
-    public String getString(String key){
-        return System.getProperty(key,prop.getProperty(key));
+    public String getString(String key) {
+        return System.getProperty(key, prop.getProperty(key));
     }
 }
